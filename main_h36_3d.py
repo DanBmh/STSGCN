@@ -225,11 +225,13 @@ def train():
 
 def test():
 
+    n_total = 0  # number of batches for all the sequences
+    t_3d_all = []
+
     model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
     model.eval()
-    accum_loss = 0
-    n_batches = 0  # number of batches for all the sequences
     actions = define_actions(args.actions_to_consider)
+
     dim_used = np.array(
         [
             6,
@@ -311,8 +313,9 @@ def test():
     )
 
     for action in actions:
-        running_loss = 0
         n = 0
+        t_3d = np.zeros([args.output_n])
+
         dataset_test = datasets.Datasets(
             args.data_dir,
             args.input_n,
@@ -322,7 +325,6 @@ def test():
             actions=[action],
         )
         print(">>> test action for sequences: {:d}".format(dataset_test.__len__()))
-
         test_loader = DataLoader(
             dataset_test,
             batch_size=args.batch_size_test,
@@ -330,6 +332,7 @@ def test():
             num_workers=0,
             pin_memory=True,
         )
+
         for cnt, batch in enumerate(test_loader):
             with torch.no_grad():
 
@@ -356,26 +359,31 @@ def test():
                 )
 
                 all_joints_seq[:, :, dim_used] = sequences_predict
-
                 all_joints_seq[:, :, index_to_ignore] = all_joints_seq[
                     :, :, index_to_equal
                 ]
 
-                loss = mpjpe_error(
-                    all_joints_seq.view(-1, args.output_n, 32, 3),
-                    sequences_gt.view(-1, args.output_n, 32, 3),
+                loss = torch.sqrt(
+                    torch.sum(
+                        (
+                            all_joints_seq.view(batch_dim, -1, 32, 3)
+                            - sequences_gt.view(batch_dim, -1, 32, 3)
+                        )
+                        ** 2,
+                        dim=-1,
+                    )
                 )
-                running_loss += loss * batch_dim
-                accum_loss += loss * batch_dim
+                loss = torch.sum(torch.mean(loss, dim=2), dim=0)
+                t_3d += loss.cpu().data.numpy()
 
-        print(
-            "loss at test subject for action : "
-            + str(action)
-            + " is: "
-            + str(running_loss / n)
-        )
-        n_batches += n
-    print("overall average loss in mm is: " + str(accum_loss / n_batches))
+        n_total += n
+        frame_losses = t_3d / n
+        t_3d_all.append(frame_losses)
+        print('Frame losses for action "{}" are:'.format(action), frame_losses)
+
+    avg_losses = np.mean(t_3d_all, axis=0)
+    print("Total samples:", n_total)
+    print("Averaged frame losses in mm are:", avg_losses)
 
 
 if __name__ == "__main__":
