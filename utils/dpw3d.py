@@ -1,24 +1,24 @@
-from torch.utils.data import Dataset
-import numpy as np
-from h5py import File
-import scipy.io as sio
-from utils import data_utils
-from matplotlib import pyplot as plt
-import torch
 import os
-from utils import ang2joint
 import pickle as pkl
-import os
 from os import walk
 
-'''
+import numpy as np
+import scipy.io as sio
+import torch
+from h5py import File
+from matplotlib import pyplot as plt
+from torch.utils.data import Dataset
+
+from utils import ang2joint, data_utils
+
+"""
 adapted from 
 https://github.com/wei-mao-2019/HisRepItself/blob/master/utils/dpw3d.py
-'''
+"""
+
 
 class Datasets(Dataset):
-
-    def __init__(self,data_dir,input_n,output_n,skip_rate,split=0):
+    def __init__(self, data_dir, input_n, output_n, skip_rate, split=0):
         """
         :param path_to_data:
         :param actions:
@@ -28,11 +28,11 @@ class Datasets(Dataset):
         :param split: 0 train, 1 testing, 2 validation
         :param sample_rate:
         """
-        self.path_to_data = os.path.join(data_dir,'3dpw/sequenceFiles')
+        self.path_to_data = os.path.join(data_dir, "3dpw/sequenceFiles")
         self.split = split
         self.in_n = input_n
         self.out_n = output_n
-        #self.sample_rate = opt.sample_rate
+        # self.sample_rate = opt.sample_rate
         self.p3d = []
         self.keys = []
         self.data_idx = []
@@ -40,11 +40,11 @@ class Datasets(Dataset):
         seq_len = self.in_n + self.out_n
 
         if split == 0:
-            data_path = self.path_to_data + '/train/'
+            data_path = self.path_to_data + "/train/"
         elif split == 2:
-            data_path = self.path_to_data + '/test/'
+            data_path = self.path_to_data + "/test/"
         elif split == 1:
-            data_path = self.path_to_data + '/validation/'
+            data_path = self.path_to_data + "/validation/"
         files = []
         for (dirpath, dirnames, filenames) in walk(data_path):
             files.extend(filenames)
@@ -65,9 +65,9 @@ class Datasets(Dataset):
         # p3d0 = lbs.vertices2joints(bm.J_regressor, v_shaped)  # [1,52,3]
         # p3d0 = (p3d0 - p3d0[:, 0:1, :]).float().cuda()[:, :22]
         # parents = bm.kintree_table.data.numpy()[0, :]
-        skel = np.load('./body_models/smpl_skeleton.npz')
-        p3d0 = torch.from_numpy(skel['p3d0']).float().cuda()[:, :22]
-        parents = skel['parents']
+        skel = np.load("./body_models/smpl_skeleton.npz")
+        p3d0 = torch.from_numpy(skel["p3d0"]).float().cuda()[:, :22]
+        parents = skel["parents"]
         parent = {}
         for i in range(len(parents)):
             if i > 21:
@@ -78,10 +78,10 @@ class Datasets(Dataset):
         sample_rate = int(60 // 25)
 
         for f in files:
-            with open(data_path + f, 'rb') as f:
-                print('>>> loading {}'.format(f))
-                data = pkl.load(f, encoding='latin1')
-                joint_pos = data['poses_60Hz']
+            with open(data_path + f, "rb") as f:
+                print(">>> loading {}".format(f))
+                data = pkl.load(f, encoding="latin1")
+                joint_pos = data["poses_60Hz"]
                 for i in range(len(joint_pos)):
                     poses = joint_pos[i]
                     fn = poses.shape[0]
@@ -123,5 +123,3 @@ class Datasets(Dataset):
         key, start_frame = self.data_idx[item]
         fs = np.arange(start_frame, start_frame + self.in_n + self.out_n)
         return self.p3d[key][fs]
-
-
