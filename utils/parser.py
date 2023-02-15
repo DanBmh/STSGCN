@@ -28,7 +28,6 @@ parser.add_argument(
     "--joints_to_consider",
     type=int,
     default=22,
-    choices=[16, 18, 22],
     help="number of joints to use, defaults=16 for H36M angles, 22 for H36M 3D or 18 for AMASS/3DPW",
 )
 
