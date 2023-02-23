@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,8 +46,36 @@ datapath_save_out = "/datasets/tmp/human36m/{}_forecast_samples.json"
 config = {
     "item_step": 2,
     "window_step": 2,
-    "input_n": 10,
+    "input_n": 50,
     "output_n": 25,
+    "select_joints": [
+        "hip_middle",
+        "hip_right",
+        "knee_right",
+        "ankle_right",
+        # "middlefoot_right",
+        # "forefoot_right",
+        "hip_left",
+        "knee_left",
+        "ankle_left",
+        # "middlefoot_left",
+        # "forefoot_left",
+        # "spine_upper",
+        # "neck",
+        "nose",
+        # "head",
+        "shoulder_left",
+        "elbow_left",
+        "wrist_left",
+        # "hand_left",
+        # "thumb_left",
+        "shoulder_right",
+        "elbow_right",
+        "wrist_right",
+        # "hand_right",
+        # "thumb_right",
+        "shoulder_middle",
+    ],
 }
 
 viz_action = ""
@@ -228,6 +257,7 @@ def test():
     label_gen_test = utils_pipeline.create_labels_generator(dataset_test, config)
     dataset_test = utils_pipeline.seperate_scenes(label_gen_test)
 
+    stime = time.time()
     with torch.no_grad():
         nbatch = 1
 
@@ -271,6 +301,9 @@ def test():
         avg_losses = np.mean(action_losses, axis=0)
         print("Averaged frame losses in mm are:", avg_losses)
 
+    ftime = time.time()
+    print("Testing took {} seconds".format(int(ftime - stime)))
+
 
 # ==================================================================================================
 
@@ -278,7 +311,10 @@ def test():
 if __name__ == "__main__":
 
     if args.mode == "train":
+        stime = time.time()
         train()
+        ftime = time.time()
+        print("Training took {} seconds".format(int(ftime - stime)))
     elif args.mode == "test":
         test()
     elif args.mode == "viz":
