@@ -129,9 +129,6 @@ def train():
     dataset_eval, dlen_eval = utils_pipeline.load_dataset(
         datapath_save_out, "eval", config
     )
-    dataset_test, dlen_test = utils_pipeline.load_dataset(
-        datapath_save_out, "test", config
-    )
 
     train_loss, val_loss, test_loss = [], [], []
     best_loss = np.inf
@@ -143,7 +140,6 @@ def train():
 
         label_gen_train = utils_pipeline.create_labels_generator(dataset_train, config)
         label_gen_eval = utils_pipeline.create_labels_generator(dataset_eval, config)
-        label_gen_test = utils_pipeline.create_labels_generator(dataset_test, config)
 
         nbatch = args.batch_size
         for batch in tqdm.tqdm(
@@ -175,11 +171,9 @@ def train():
 
         eval_loss = run_eval(model, label_gen_eval, dlen_eval, args)
         val_loss.append(eval_loss)
-        test_loss.append(run_eval(model, label_gen_test, dlen_test, args))
 
         tb_writer.add_scalar("loss/train", train_loss[-1].item(), epoch)
         tb_writer.add_scalar("loss/val", val_loss[-1].item(), epoch)
-        tb_writer.add_scalar("loss/test", test_loss[-1].item(), epoch)
         torch.save(model.state_dict(), os.path.join(log_dir, "model.pt"))
 
         if eval_loss < best_loss:
