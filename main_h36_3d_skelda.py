@@ -100,7 +100,7 @@ def get_log_dir(out_dir):
 
 
 def prepare_sequences(batch, batch_size: int, split: str, device):
-    sequences = utils_pipeline.make_input_sequence(batch, split)
+    sequences = utils_pipeline.make_input_sequence(batch, split, "gt-gt")
     sequences = torch.from_numpy(sequences).to(device)
 
     return sequences
