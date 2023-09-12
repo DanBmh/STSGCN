@@ -15,7 +15,7 @@ from utils.h36_3d_viz import visualize
 from utils.loss_funcs import *
 from utils.parser import args
 
-sys.path.append("/PoseForecaster/")
+sys.path.append("/PoseForecasters/")
 import utils_pipeline
 
 # ==================================================================================================
